@@ -8,7 +8,7 @@ async function getTable(req, res){
   }
 
 cart.get("/", (req, res)=>{
-    // getTable(req, res);
+    getTable(req, res);
     let maxPrice = req.query.maxPrice;
     if(maxPrice){
         pool.query("select * from shopping_cart where price<=$1", [maxPrice]).then(result =>{
@@ -29,6 +29,7 @@ cart.get("/", (req, res)=>{
             res.json(result.rows);
         })
     }
+    getTable(req, res);
     
 });
 
@@ -47,19 +48,22 @@ cart.get("/:id", async (req, res) =>{
 });
 
 cart.post("/", async (req, res) =>{
-    let results = await pool.query('INSERT INTO shopping_cart ("product", "price", "quantity") VALUES ($1, $2, $3)', [req.body.product, req.body.price, req.body.quantity])
-    res.status(201).json(results.rows);
+    const {product, price, quantity} = req.body;
+    await pool.query('INSERT INTO shopping_cart(product, price, quantity) VALUES($1, $2, $3)', [product, price, quantity])
+    let newItem = await pool.query('SELECT * FROM shopping_cart WHERE product=$1 ORDER BY id DESC LIMIT 1', [product])
+    res.status(201).json(newItem.rows);
 });
 
 cart.put("/:id", async (req, res) =>{
     let updatedCart = req.body;
-    let results = await pool.query('UPDATE shopping_cart SET "product"=$1 WHERE id=$2', [req.body.product, req.params.id])
-    res.json(results.rows[0])
+    await pool.query('UPDATE shopping_cart SET "product"=$1, "price"=$2, "quantity"=$3 WHERE id=$4', [req.body.product, req.body.price, req.body.quantity, req.params.id])
+    let newProduct = await pool.query('SELECT * FROM shopping_cart WHERE id=$1', [req.params.id])
+    res.json(newProduct.rows)
 });
   
 cart.delete("/:id", (req, res) => {
     pool.query("DELETE FROM shopping_cart WHERE id=$1", [req.params.id]).then(results => {
-        res.status(204).json(results);
+    res.status(204).json(results);
     })
 });
 
