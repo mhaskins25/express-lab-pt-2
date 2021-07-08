@@ -46,51 +46,21 @@ cart.get("/:id", async (req, res) =>{
     }
 });
 
-cart.post("/", (req, res) =>{
-
+cart.post("/", async (req, res) =>{
+    let results = await pool.query('INSERT INTO shopping_cart ("product", "price", "quantity") VALUES ($1, $2, $3)', [req.body.product, req.body.price, req.body.quantity])
+    res.status(201).json(results.rows);
 });
 
-//   cart.post("/", (req, res) => {
-//       let test = req.body.test
-//       console.log("Test results:", test )
-//       let x = cartItems.length + 1;
-//       let newItem = req.body;
-//       newItem.id = x;
-//       cartItems.push(newItem);
-//       res.status(201).json(cartItems);
-//       res.json("Adding new item..");
-//   });
-
-cart.put("/:id", (req, res) =>{
-
+cart.put("/:id", async (req, res) =>{
+    let updatedCart = req.body;
+    let results = await pool.query('UPDATE shopping_cart SET "product"=$1 WHERE id=$2', [req.body.product, req.params.id])
+    res.json(results.rows[0])
 });
   
-
-//   cart.put("/:id", (req, res) => {
-//     let id = req.params.id;
-//     let updatedCart = req.body;
-//     let found = cartItems.findIndex((item) => item.id == id);
-//     if(found){
-//       cartItems[found] = {...cartItems[found], ...updatedCart};
-//       res.json(cartItems[found]);
-//     }else{
-//       res.json("No item updates");
-//     }
-//   });
-
 cart.delete("/:id", (req, res) => {
-    pool.query("DELETE FROM shopping_cart WHERE id=$1", [req.params.id].then(() => {
-        res.sendStatus(204)
-    }))
+    pool.query("DELETE FROM shopping_cart WHERE id=$1", [req.params.id]).then(results => {
+        res.status(204).json(results);
+    })
 });
-
-//   cart.delete("/:id", (req, res) => {
-//       //logic to delete a student
-//       let id = req.params.id;
-//       let index = cartItems.findIndex(item => item.id == id);
-//       cartItems.splice(index, 1);
-//       console.log(cartItems)
-//       res.status(204).json(cartItems);
-//   });
 
   module.exports = cart;
