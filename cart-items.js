@@ -32,11 +32,13 @@ cart.get("/cart-items", (req, res)=>{
     
 });
 
+//Chris' extended challenge (lines 36-40)
 cart.get("/cart-items-total", async (req, res)=>{
     let subTotal = await pool.query("SELECT product, SUM(price * quantity) FROM shopping_cart GROUP BY product");
     let grandTotal = await pool.query("SELECT SUM(price * quantity) FROM shopping_cart");
     res.json({"Sub Totals": subTotal.rows, "Grand Total": grandTotal.rows});   
 });
+//End of extended challenge code
 
 cart.get("/cart-items/:id", async (req, res) =>{
     let id = req.params.id;
