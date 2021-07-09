@@ -7,8 +7,7 @@ async function getTable(req, res){
     res.json(results.rows);
   }
 
-cart.get("/", (req, res)=>{
-    getTable(req, res);
+cart.get("/cart-items", (req, res)=>{
     let maxPrice = req.query.maxPrice;
     if(maxPrice){
         pool.query("select * from shopping_cart where price<=$1", [maxPrice]).then(result =>{
@@ -33,7 +32,13 @@ cart.get("/", (req, res)=>{
     
 });
 
-cart.get("/:id", async (req, res) =>{
+cart.get("/cart-items-total", async (req, res)=>{
+    let subTotal = await pool.query("SELECT product, SUM(price * quantity) FROM shopping_cart GROUP BY product");
+    let grandTotal = await pool.query("SELECT SUM(price * quantity) FROM shopping_cart");
+    res.json({"Sub Totals": subTotal.rows, "Grand Total": grandTotal.rows});   
+});
+
+cart.get("/cart-items/:id", async (req, res) =>{
     let id = req.params.id;
     try{
         let result = await pool.query("SELECT * FROM shopping_cart WHERE id=$1", [id]);
@@ -47,24 +52,24 @@ cart.get("/:id", async (req, res) =>{
     }
 });
 
-cart.post("/", async (req, res) =>{
+cart.post("/cart-items", async (req, res) =>{
     const {product, price, quantity} = req.body;
     await pool.query('INSERT INTO shopping_cart(product, price, quantity) VALUES($1, $2, $3)', [product, price, quantity])
     let newItem = await pool.query('SELECT * FROM shopping_cart WHERE product=$1 ORDER BY id DESC LIMIT 1', [product])
     res.status(201).json(newItem.rows);
 });
 
-cart.put("/:id", async (req, res) =>{
+cart.put("/cart-items/:id", async (req, res) =>{
     let updatedCart = req.body;
     await pool.query('UPDATE shopping_cart SET "product"=$1, "price"=$2, "quantity"=$3 WHERE id=$4', [req.body.product, req.body.price, req.body.quantity, req.params.id])
     let newProduct = await pool.query('SELECT * FROM shopping_cart WHERE id=$1', [req.params.id])
     res.json(newProduct.rows)
 });
   
-cart.delete("/:id", (req, res) => {
-    pool.query("DELETE FROM shopping_cart WHERE id=$1", [req.params.id]).then(results => {
-    res.status(204).json(results);
-    })
+cart.delete("/cart-items/:id", async (req, res) => {
+    let id = req.params.id;
+    let remove = await pool.query('DELETE FROM shopping_cart WHERE id=$1', [id]);
+    res.status(204).json(remove);
 });
 
   module.exports = cart;

@@ -6,5 +6,5 @@ const port = 3000;
 // app.use(cors());
 
 app.use(express.json());
-app.use('/cart-items', cart);
+app.use('/', cart);
 app.listen(port, () => console.log(`Listening on port: ${port}.`));
